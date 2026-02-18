@@ -12,6 +12,8 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(11)
     }
+    withSourcesJar()
+    withJavadocJar()
 }
 
 repositories {
@@ -51,7 +53,7 @@ tasks.withType<Jar> {
 }
 
 tasks.shadowJar {
-    archiveClassifier.set("")
+    archiveClassifier.set("all")
     mergeServiceFiles()
 
     // Relocate dependencies to avoid conflicts with application code
@@ -61,17 +63,12 @@ tasks.shadowJar {
     relocate("org.slf4j", "com.aivory.shadow.slf4j")
 }
 
-tasks.build {
-    dependsOn(tasks.shadowJar)
-}
-
 tasks.test {
     useJUnitPlatform()
 }
 
-java {
-    withSourcesJar()
-    withJavadocJar()
+tasks.withType<Javadoc> {
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
 }
 
 publishing {
