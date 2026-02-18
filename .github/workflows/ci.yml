@@ -14,6 +14,7 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
       - run: ./gradlew check
       - run: ./gradlew test
       - run: ./gradlew shadowJar
