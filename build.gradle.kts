@@ -5,7 +5,7 @@ plugins {
     `signing`
 }
 
-group = "com.aivory.monitor"
+group = "net.aivory"
 version = "1.0.0"
 
 java {
@@ -76,7 +76,7 @@ publishing {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
 
-            groupId = "com.aivory.monitor"
+            groupId = "net.aivory"
             artifactId = "aivory-monitor-agent-java"
             version = project.version.toString()
 
@@ -111,12 +111,8 @@ publishing {
 
     repositories {
         maven {
-            name = "OSSRH"
-            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-            credentials {
-                username = findProperty("ossrhUsername") as String? ?: ""
-                password = findProperty("ossrhPassword") as String? ?: ""
-            }
+            name = "staging"
+            url = uri(layout.buildDirectory.dir("staging-deploy"))
         }
     }
 }

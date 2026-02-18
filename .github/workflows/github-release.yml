@@ -39,10 +39,15 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11'
-      - name: Publish to Maven Central
+      - name: Publish to local staging
         env:
           ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_PRIVATE_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ""
-          ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.MAVEN_USERNAME }}
-          ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.MAVEN_PASSWORD }}
-        run: gradle publish
+        run: gradle publishMavenJavaPublicationToStagingRepository
+      - name: Upload to Maven Central
+        run: |
+          cd build/staging-deploy
+          zip -r bundle.zip .
+          curl --fail -X POST "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC" \
+            -H "Authorization: Bearer ${{ secrets.MAVEN_CENTRAL_TOKEN }}" \
+            -F "bundle=@bundle.zip"
