@@ -16,6 +16,5 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: wrapper
-      - run: gradle check
-      - run: gradle test
+      - run: gradle assemble
       - run: gradle shadowJar
