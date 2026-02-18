@@ -48,6 +48,7 @@ jobs:
         run: |
           cd build/staging-deploy
           zip -r bundle.zip .
+          TOKEN=$(echo -n "${{ secrets.MAVEN_USERNAME }}:${{ secrets.MAVEN_PASSWORD }}" | base64)
           curl --fail -X POST "https://central.sonatype.com/api/v1/publisher/upload?publishingType=AUTOMATIC" \
-            -H "Authorization: Bearer ${{ secrets.MAVEN_CENTRAL_TOKEN }}" \
+            -H "Authorization: Bearer $TOKEN" \
             -F "bundle=@bundle.zip"
