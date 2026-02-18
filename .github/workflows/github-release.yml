@@ -39,7 +39,10 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: wrapper
-      - name: Import GPG key
-        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
       - name: Publish to Maven Central
-        run: gradle publish -Psigning.gnupg.keyName=${{ secrets.GPG_KEY_ID }} -Psigning.gnupg.passphrase="" -PossrhUsername=${{ secrets.MAVEN_USERNAME }} -PossrhPassword=${{ secrets.MAVEN_PASSWORD }}
+        env:
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.GPG_PRIVATE_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ""
+          ORG_GRADLE_PROJECT_ossrhUsername: ${{ secrets.MAVEN_USERNAME }}
+          ORG_GRADLE_PROJECT_ossrhPassword: ${{ secrets.MAVEN_PASSWORD }}
+        run: gradle publish

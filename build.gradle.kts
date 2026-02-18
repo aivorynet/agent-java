@@ -1,6 +1,8 @@
 plugins {
     id("java")
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    `maven-publish`
+    `signing`
 }
 
 group = "com.aivory.monitor"
@@ -65,4 +67,68 @@ tasks.build {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+
+            groupId = "com.aivory.monitor"
+            artifactId = "aivory-monitor-agent-java"
+            version = project.version.toString()
+
+            pom {
+                name.set("AIVory Monitor Java Agent")
+                description.set("AIVory Monitor Java Agent - Remote debugging with AI-powered fix generation")
+                url.set("https://aivory.net/monitor/")
+
+                licenses {
+                    license {
+                        name.set("MIT License")
+                        url.set("https://opensource.org/licenses/MIT")
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set("ilscipio")
+                        name.set("ILSCIPIO GmbH")
+                        email.set("info@ilscipio.com")
+                    }
+                }
+
+                scm {
+                    url.set("https://github.com/aivorynet/agent-java")
+                    connection.set("scm:git:https://github.com/aivorynet/agent-java.git")
+                    developerConnection.set("scm:git:ssh://git@github.com:aivorynet/agent-java.git")
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "OSSRH"
+            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = findProperty("ossrhUsername") as String? ?: ""
+                password = findProperty("ossrhPassword") as String? ?: ""
+            }
+        }
+    }
+}
+
+signing {
+    val signingKey = findProperty("signingKey") as String?
+    val signingPassword = findProperty("signingPassword") as String? ?: ""
+    if (signingKey != null) {
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        sign(publishing.publications["mavenJava"])
+    }
 }
