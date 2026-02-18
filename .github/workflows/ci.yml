@@ -17,4 +17,3 @@ jobs:
         with:
           gradle-version: wrapper
       - run: gradle assemble
-      - run: gradle shadowJar
