@@ -245,7 +245,7 @@ public class BackendConnection {
         payload.put("hostname", config.getHostname());
         payload.put("runtime", "java");
         payload.put("runtime_version", System.getProperty("java.version"));
-        payload.put("agent_version", "1.0.0");
+        payload.put("agent_version", "1.0.1");
         payload.put("environment", config.getEnvironment());
 
         // Include release context in registration so backend knows agent's version
