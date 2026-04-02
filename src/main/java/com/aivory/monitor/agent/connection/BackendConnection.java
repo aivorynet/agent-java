@@ -33,7 +33,6 @@ public class BackendConnection {
     private static final int HEARTBEAT_INTERVAL_MS = 30000;
     private static final int RECONNECT_BASE_DELAY_MS = 1000;
     private static final int MAX_RECONNECT_DELAY_MS = 60000;
-    private static final int MAX_RECONNECT_ATTEMPTS = 10;
     private static final int MESSAGE_QUEUE_SIZE = 1000;
 
     private final AgentConfig config;
@@ -50,6 +49,7 @@ public class BackendConnection {
     private final AtomicBoolean authenticated = new AtomicBoolean(false);
     private final AtomicBoolean shouldReconnect = new AtomicBoolean(true);
     private final AtomicInteger reconnectAttempts = new AtomicInteger(0);
+    private final AtomicInteger connectionGeneration = new AtomicInteger(0);
 
     public BackendConnection(AgentConfig config, BreakpointManager breakpointManager) {
         this.config = config;
@@ -245,7 +245,7 @@ public class BackendConnection {
         payload.put("hostname", config.getHostname());
         payload.put("runtime", "java");
         payload.put("runtime_version", System.getProperty("java.version"));
-        payload.put("agent_version", "1.0.1");
+        payload.put("agent_version", "1.0.2");
         payload.put("environment", config.getEnvironment());
 
         // Include release context in registration so backend knows agent's version
@@ -264,10 +264,16 @@ public class BackendConnection {
     private void startHeartbeat() {
         stopHeartbeat();
 
+        final int generation = connectionGeneration.get();
         heartbeatTimer = new Timer("AIVory-Heartbeat", true);
         heartbeatTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
+                if (connectionGeneration.get() != generation) {
+                    // Stale heartbeat from a previous connection; cancel silently
+                    cancel();
+                    return;
+                }
                 if (authenticated.get()) {
                     Map<String, Object> payload = new HashMap<>();
                     payload.put("timestamp", System.currentTimeMillis());
@@ -291,12 +297,8 @@ public class BackendConnection {
         }
 
         int attempts = reconnectAttempts.incrementAndGet();
-        if (attempts > MAX_RECONNECT_ATTEMPTS) {
-            LOG.error("Max reconnect attempts reached, giving up");
-            return;
-        }
 
-        int delay = Math.min(RECONNECT_BASE_DELAY_MS * (1 << (attempts - 1)), MAX_RECONNECT_DELAY_MS);
+        int delay = Math.min(RECONNECT_BASE_DELAY_MS * (1 << Math.min(attempts - 1, 16)), MAX_RECONNECT_DELAY_MS);
         LOG.info("Scheduling reconnect attempt {} in {}ms", attempts, delay);
 
         cancelReconnect();
@@ -442,6 +444,7 @@ public class BackendConnection {
         @Override
         public void onOpen(ServerHandshake handshake) {
             LOG.info("WebSocket connected");
+            connectionGeneration.incrementAndGet();
             connected.set(true);
             authenticate();
         }

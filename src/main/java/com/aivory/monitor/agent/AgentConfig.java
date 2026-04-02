@@ -25,7 +25,7 @@ public class AgentConfig {
     private static final Pattern REPO_PATTERN = Pattern.compile("[:/]([^/]+/[^/]+?)(?:\\.git)?$");
 
     private String apiKey;
-    private String backendUrl = "wss://api.aivory.net/monitor/agent";
+    private String backendUrl = "wss://api.aivory.net/ws/agent";
     private String environment = "production";
     private double samplingRate = 1.0;
     private int maxCaptureDepth = 10;
